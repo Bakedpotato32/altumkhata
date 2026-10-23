@@ -1,0 +1,9 @@
+{
+  "appId": "in.altumcore.khata",
+  "appName": "AltumKhata",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
