@@ -1,10 +1,10 @@
 import { registerPlugin, Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { domToPng } from 'modern-screenshot';
 import { jsPDF } from 'jspdf';
-import { formatCurrency, getUpiUri } from './whatsapp';
+import { formatCurrency, getUpiUri, sendDirectWhatsAppInvoice } from './whatsapp';
 
-// Register our native plugin
 const DirectWhatsApp = registerPlugin('DirectWhatsApp');
 
 export const buildReceiptCaption = ({ customer, shop, lang = 'hi' }) => {
@@ -48,7 +48,7 @@ export const captureCanvasToBlob = async (canvasElementId) => {
 };
 
 /**
- * 1-Tap DIRECT WhatsApp Image + Number Dispatch
+ * Direct WhatsApp Image Dispatch with Automatic Fallback
  */
 export const exportReceiptImageAttachment = async ({
   canvasElementId = 'virtual-receipt-canvas',
@@ -62,20 +62,36 @@ export const exportReceiptImageAttachment = async ({
   const rawBase64 = dataUrl.split(',')[1];
 
   if (Capacitor.isNativePlatform()) {
-    // 1. Save PNG to cache
     const writeResult = await Filesystem.writeFile({
       path: filename,
       data: rawBase64,
       directory: Directory.Cache
     });
 
-    // 2. Call Native Direct WhatsApp Plugin with JID & Image Stream
-    await DirectWhatsApp.shareImageToNumber({
-      phone: customer.phone,
-      filePath: writeResult.uri,
-      message: caption
-    });
-    return true;
+    try {
+      // 1. Try Native Direct WhatsApp Plugin
+      await DirectWhatsApp.shareImageToNumber({
+        phone: customer.phone,
+        filePath: writeResult.uri,
+        message: caption
+      });
+      return true;
+    } catch (pluginErr) {
+      console.warn('DirectWhatsApp plugin fallback:', pluginErr);
+      // 2. Safe Fallback: Standard Capacitor Share Sheet
+      try {
+        await Share.share({
+          title: `${customer?.name || 'ग्राहक'} - उधार पर्ची`,
+          text: caption,
+          files: [writeResult.uri],
+          dialogTitle: 'WhatsApp पर रसीद भेजें'
+        });
+        return true;
+      } catch {
+        sendDirectWhatsAppInvoice({ customer, shop, lang });
+        return true;
+      }
+    }
   } else {
     // Web Share fallback for browser testing
     const file = new File([blob], filename, { type: 'image/png' });
@@ -127,11 +143,16 @@ export const exportReceiptPdf = async ({
       directory: Directory.Cache
     });
 
-    await DirectWhatsApp.shareImageToNumber({
-      phone: customer.phone,
-      filePath: writeResult.uri,
-      message: caption
-    });
+    try {
+      await Share.share({
+        title: `${customer?.name || 'ग्राहक'} - PDF रसीद`,
+        text: caption,
+        files: [writeResult.uri],
+        dialogTitle: 'PDF रसीद शेयर करें'
+      });
+    } catch {
+      // Fallback
+    }
     return true;
   } else {
     pdf.save(filename);
