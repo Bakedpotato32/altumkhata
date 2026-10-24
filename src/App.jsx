@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, MessageCircle, Heart } from 'lucide-react';
+import { Plus, MessageCircle } from 'lucide-react';
 import { useKhata } from './context/KhataContext';
 import { useLanguage } from './context/LanguageContext';
 import { SplashScreen } from './components/SplashScreen';
@@ -36,7 +36,7 @@ export function App() {
 
   const { lang, toggleLanguage } = useLanguage();
 
-  // Splash Screen State (1.9s)
+  // 2.2 Seconds Smooth Splash with Instant Skip
   const [showSplash, setShowSplash] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -69,9 +69,9 @@ export function App() {
 
   return (
     <div className="min-h-screen relative pb-28 pt-3 px-4 max-w-md mx-auto">
-      {/* Animated Splash Screen */}
+      {/* Butter-Smooth 2.2s Splash with Skip Button */}
       <AnimatePresence>
-        {showSplash && <SplashScreen />}
+        {showSplash && <SplashScreen onSkip={() => setShowSplash(false)} />}
       </AnimatePresence>
 
       {/* Onboarding Wizard */}
@@ -116,9 +116,8 @@ export function App() {
           </div>
         </div>
 
-        {/* Right Header Buttons: '+ ग्राहक', 'Get Help WhatsApp (7054937918)', and 'Language' */}
+        {/* Right Header Buttons */}
         <div className="flex items-center gap-1.5">
-          {/* 1-Tap Get Help Button */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => {
@@ -131,7 +130,6 @@ export function App() {
             <MessageCircle className="w-4 h-4 fill-emerald-600" />
           </motion.button>
 
-          {/* New Customer Button */}
           <motion.button
             whileTap={{ scale: 0.94 }}
             onClick={() => {
@@ -144,7 +142,6 @@ export function App() {
             <span>+ ग्राहक</span>
           </motion.button>
 
-          {/* Language Toggle */}
           <button
             onClick={() => {
               triggerHaptic('selection');
@@ -181,7 +178,7 @@ export function App() {
         />
       )}
 
-      {/* Bottom Floating Glass Dock */}
+      {/* Floating Glass Dock */}
       <GlassDock
         currentTab={currentTab}
         setTab={(tab) => {
