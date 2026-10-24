@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageCircle, FileText, Image as ImageIcon, Send } from 'lucide-react';
+import { X, MessageCircle, FileText, Share2, Sparkles, Image as ImageIcon } from 'lucide-react';
 import QRCode from 'qrcode';
-import { formatCurrency, getUpiUri, sendWhatsAppReminder } from '../utils/whatsapp';
-import { exportReceiptPdf, exportReceiptImage } from '../utils/receiptGenerator';
+import { formatCurrency, getUpiUri, sendDirectWhatsAppInvoice } from '../utils/whatsapp';
+import { exportReceiptImageAttachment, exportReceiptPdf } from '../utils/receiptGenerator';
 import { GlassDialog } from './GlassDialog';
 import { triggerHaptic } from '../utils/haptics';
 import { useLanguage } from '../context/LanguageContext';
@@ -17,6 +17,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
 
   const customerTransactions = transactions.filter((t) => t.customerId === customer?.id);
 
+  // Generate UPI QR Code
   useEffect(() => {
     if (!customer || !shop || !isOpen) return;
     const upiLink = getUpiUri({
@@ -32,29 +33,50 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
 
   if (!isOpen || !customer) return null;
 
-  const handleExport = async (type = 'image') => {
+  // 1. Direct 1-Tap WhatsApp Invoice
+  const handleDirectInvoice = () => {
+    triggerHaptic('success');
+    sendDirectWhatsAppInvoice({
+      customer,
+      shop,
+      transactions,
+      lang
+    });
+  };
+
+  // 2. Graphical Photo Slip Share
+  const handleSharePhoto = async () => {
     setIsExporting(true);
     triggerHaptic('heavy');
     try {
-      if (type === 'image') {
-        await exportReceiptImage({
-          canvasElementId: 'virtual-receipt-canvas',
-          filename: `${customer.name}_Khata_Slip.png`,
-          customer,
-          shop,
-          lang
-        });
-      } else {
-        await exportReceiptPdf({
-          canvasElementId: 'virtual-receipt-canvas',
-          filename: `${customer.name}_Khata_Bill.pdf`,
-          customer,
-          shop,
-          lang
-        });
-      }
+      await exportReceiptImageAttachment({
+        canvasElementId: 'virtual-receipt-canvas',
+        filename: `${customer.name}_Khata_Slip.png`,
+        customer,
+        shop,
+        lang
+      });
     } catch (err) {
-      setErrorMessage('रसीद बनाने में समस्या: ' + (err.message || 'Error'));
+      setErrorMessage('फोटो पर्ची शेयर में समस्या: ' + (err.message || 'Error'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // 3. PDF Export
+  const handleExportPdf = async () => {
+    setIsExporting(true);
+    triggerHaptic('selection');
+    try {
+      await exportReceiptPdf({
+        canvasElementId: 'virtual-receipt-canvas',
+        filename: `${customer.name}_Khata_Bill.pdf`,
+        customer,
+        shop,
+        lang
+      });
+    } catch (err) {
+      setErrorMessage('PDF बनाने में समस्या: ' + (err.message || 'Error'));
     } finally {
       setIsExporting(false);
     }
@@ -68,7 +90,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+          className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden relative"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
@@ -89,7 +111,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
             </button>
           </div>
 
-          {/* Screen Preview */}
+          {/* Interactive Screen Preview */}
           <div className="p-4 overflow-y-auto space-y-4 no-scrollbar">
             <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50 flex items-center justify-between">
               <div>
@@ -125,43 +147,40 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
 
           {/* Action Hub */}
           <div className="p-3 bg-slate-50 border-t border-slate-100 space-y-2">
-            {/* Primary Action: Direct WhatsApp Chat */}
+            {/* Primary Action: 1-Tap Direct WhatsApp Invoice */}
             <button
-              onClick={() => {
-                triggerHaptic('medium');
-                sendWhatsAppReminder({ customer, shop, mode: 'polite', lang });
-              }}
-              className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/25 active:scale-95 transition-all flex items-center justify-center gap-2"
+              onClick={handleDirectInvoice}
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-700 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              <MessageCircle className="w-4 h-4" />
-              <span>सीधे व्हाट्सएप चैट में खोलें (Direct WhatsApp)</span>
+              <MessageCircle className="w-5 h-5 fill-current" />
+              <span>सीधे व्हाट्सएप पर बिल भेजें (1-Tap Direct Invoice)</span>
             </button>
 
-            {/* Secondary Row: Share Photo Slip (PNG) + PDF Slip */}
+            {/* Secondary Row: Photo Slip & PDF */}
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => handleExport('image')}
+                onClick={handleSharePhoto}
                 disabled={isExporting}
-                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-extrabold text-xs shadow-md shadow-teal-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                className="py-2.5 px-3 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 font-extrabold text-xs border border-teal-200 active:scale-95 transition-all flex items-center justify-center gap-1.5"
               >
-                <ImageIcon className="w-4 h-4" />
-                <span>{isExporting ? 'बन रहा है...' : 'फोटो पर्ची भेजें'}</span>
+                <ImageIcon className="w-4 h-4 text-teal-600" />
+                <span>{isExporting ? 'बन रहा है...' : 'फोटो पर्ची शेयर'}</span>
               </button>
 
               <button
-                onClick={() => handleExport('pdf')}
+                onClick={handleExportPdf}
                 disabled={isExporting}
-                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xs shadow-md shadow-indigo-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                className="py-2.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs border border-indigo-200 active:scale-95 transition-all flex items-center justify-center gap-1.5"
               >
-                <FileText className="w-4 h-4" />
+                <FileText className="w-4 h-4 text-indigo-600" />
                 <span>{isExporting ? 'बन रहा है...' : 'PDF रसीद'}</span>
               </button>
             </div>
           </div>
         </motion.div>
 
-        {/* UNCONSTRAINED 800PX VIRTUAL DESKTOP CANVAS */}
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '800px', pointerEvents: 'none', zIndex: -100, opacity: 0.01 }}>
+        {/* OFFSCREEN 800PX VIRTUAL DESKTOP CANVAS */}
+        <div style={{ position: 'fixed', left: '-9999px', top: 0, width: '800px', pointerEvents: 'none', zIndex: -999 }}>
           <div
             id="virtual-receipt-canvas"
             style={{
@@ -172,7 +191,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
               color: '#0f172a'
             }}
           >
-            {/* Header */}
+            {/* Header with Shop Logo */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #2563eb', paddingBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 {shop.logo && (
@@ -201,7 +220,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
               </div>
             </div>
 
-            {/* Customer Box */}
+            {/* Customer Box with Customer Photo */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '24px', borderRadius: '18px', margin: '30px 0', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 {customer.photo && (
@@ -226,7 +245,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
               </div>
             </div>
 
-            {/* Table */}
+            {/* Itemized Table */}
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
@@ -257,7 +276,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
                   ऑनलाइन भुगतान निर्देश
                 </h4>
                 <p style={{ margin: 0, fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
-                  PhonePe, Google Pay, या Paytm से यह QR कोड स्कैन करके सीधे दुकानदार के खाते में भुगतान करें।
+                  PhonePe, Google Pay, या Paytm से यह QR कोड स्कैन करके सीधे दुकान खाते में भुगतान करें।
                 </p>
                 <p style={{ marginTop: '8px', fontSize: '13px', fontWeight: '700', color: '#2563eb' }}>
                   UPI ID: {shop.upiId}
@@ -276,6 +295,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
           </div>
         </div>
 
+        {/* Custom Glass Error Dialog */}
         <GlassDialog
           isOpen={Boolean(errorMessage)}
           onClose={() => setErrorMessage(null)}

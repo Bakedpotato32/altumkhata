@@ -1,95 +1,93 @@
+import { registerPlugin, Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 import { domToPng } from 'modern-screenshot';
 import { jsPDF } from 'jspdf';
-import { Capacitor } from '@capacitor/core';
-import { Share } from '@capacitor/share';
-import { Filesystem, Directory } from '@capacitor/filesystem';
 import { formatCurrency, getUpiUri } from './whatsapp';
 
-/**
- * Capture unconstrained 800px virtual DOM element
- */
-const captureCanvasToPng = async (canvasElementId) => {
-  const node = document.getElementById(canvasElementId);
-  if (!node) throw new Error('Receipt canvas not found');
+// Register our native plugin
+const DirectWhatsApp = registerPlugin('DirectWhatsApp');
 
-  return await domToPng(node, {
-    scale: 2,
-    backgroundColor: '#ffffff',
-    quality: 0.95
-  });
-};
-
-/**
- * Build personalized caption message for WhatsApp image share
- */
 export const buildReceiptCaption = ({ customer, shop, lang = 'hi' }) => {
-  const balance = customer.balance;
+  if (!customer) return 'AltumKhata Digital Receipt';
+  const balance = customer.balance || 0;
   const greeting = customer.nickname ? `${customer.name} (${customer.nickname})` : customer.name;
-  const upiLink = shop.upiId ? getUpiUri({
+  const upiLink = shop?.upiId ? getUpiUri({
     upiId: shop.upiId,
     shopName: shop.shopName,
     amount: balance
   }) : '';
 
   if (lang === 'hi') {
-    return `🙏 *नमस्ते ${greeting} जी!*\n` +
-      `🏪 *${shop.shopName || 'किराना स्टोर'}* की उधार खाता पर्ची संलग्न है।\n` +
-      `💰 *कुल बाकी रकम: ${formatCurrency(balance)}*\n` +
+    return `🙏 *नमस्ते ${greeting} जी!*\n\n` +
+      `🏪 *${shop?.shopName || 'किराना स्टोर'}* की उधार खाता पर्ची संलग्न है।\n` +
+      `💰 *कुल बाकी हिसाब: ${formatCurrency(balance)}*\n` +
       (upiLink ? `\n💳 *ऑनलाइन UPI से तुरंत पे करें:*\n${upiLink}\n` : '') +
-      `\nधन्यवाद! 🙏\n_संचालक: ${shop.ownerName || ''} (${shop.phone || ''})_`;
+      `\nधन्यवाद! 🙏\n_दुकानदार: ${shop?.ownerName || ''} (${shop?.phone || ''})_`;
   }
 
-  return `🙏 *Hello ${greeting} ji!*\n` +
-    `🏪 Attached is your credit receipt from *${shop.shopName || 'Store'}*.\n` +
+  return `🙏 *Hello ${greeting} ji!*\n\n` +
+    `🏪 Attached is your credit receipt slip from *${shop?.shopName || 'Store'}*.\n` +
     `💰 *Total Pending Due: ${formatCurrency(balance)}*\n` +
     (upiLink ? `\n💳 *Pay instantly via UPI:*\n${upiLink}\n` : '') +
-    `\nThank you! 🙏\n_Store Owner: ${shop.ownerName || ''} (${shop.phone || ''})_`;
+    `\nThank you! 🙏\n_Store Owner: ${shop?.ownerName || ''} (${shop?.phone || ''})_`;
+};
+
+export const captureCanvasToBlob = async (canvasElementId) => {
+  const node = document.getElementById(canvasElementId);
+  if (!node) throw new Error('Receipt canvas element not found');
+
+  const dataUrl = await domToPng(node, {
+    scale: 2,
+    backgroundColor: '#ffffff',
+    quality: 0.95
+  });
+
+  const response = await fetch(dataUrl);
+  const blob = await response.blob();
+  return { dataUrl, blob };
 };
 
 /**
- * Export high-contrast PNG photo slip to WhatsApp with proper attachment stream
+ * 1-Tap DIRECT WhatsApp Image + Number Dispatch
  */
-export const exportReceiptImage = async ({ canvasElementId, filename = 'khata_slip.png', customer, shop, lang = 'hi' }) => {
-  const dataUrl = await captureCanvasToPng(canvasElementId);
+export const exportReceiptImageAttachment = async ({
+  canvasElementId = 'virtual-receipt-canvas',
+  filename = 'khata_slip.png',
+  customer,
+  shop,
+  lang = 'hi'
+}) => {
+  const { dataUrl, blob } = await captureCanvasToBlob(canvasElementId);
   const caption = buildReceiptCaption({ customer, shop, lang });
   const rawBase64 = dataUrl.split(',')[1];
 
   if (Capacitor.isNativePlatform()) {
-    // Write image to Android cache directory
+    // 1. Save PNG to cache
     const writeResult = await Filesystem.writeFile({
       path: filename,
       data: rawBase64,
       directory: Directory.Cache
     });
 
-    // Share image file stream with pre-filled caption text
-    await Share.share({
-      title: `${customer.name} - उधार पर्ची`,
-      text: caption,
-      files: [writeResult.uri],
-      dialogTitle: 'WhatsApp पर रसीद भेजें'
+    // 2. Call Native Direct WhatsApp Plugin with JID & Image Stream
+    await DirectWhatsApp.shareImageToNumber({
+      phone: customer.phone,
+      filePath: writeResult.uri,
+      message: caption
     });
     return true;
   } else {
-    // Mobile Browser / Web Share API fallback (works directly on mobile Chrome localhost)
-    try {
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-      const file = new File([blob], filename, { type: 'image/png' });
-
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: `${customer.name} - उधार पर्ची`,
-          text: caption,
-          files: [file]
-        });
-        return true;
-      }
-    } catch {
-      // If Web Share is cancelled or not supported, download the image file
+    // Web Share fallback for browser testing
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: `${customer?.name || 'ग्राहक'} - उधार पर्ची`,
+        text: caption,
+        files: [file]
+      });
+      return true;
     }
 
-    // Direct download fallback
     const link = document.createElement('a');
     link.download = filename;
     link.href = dataUrl;
@@ -98,11 +96,14 @@ export const exportReceiptImage = async ({ canvasElementId, filename = 'khata_sl
   }
 };
 
-/**
- * Export PDF receipt
- */
-export const exportReceiptPdf = async ({ canvasElementId, filename = 'khata_receipt.pdf', customer, shop, lang = 'hi' }) => {
-  const dataUrl = await captureCanvasToPng(canvasElementId);
+export const exportReceiptPdf = async ({
+  canvasElementId = 'virtual-receipt-canvas',
+  filename = 'khata_receipt.pdf',
+  customer,
+  shop,
+  lang = 'hi'
+}) => {
+  const { dataUrl } = await captureCanvasToBlob(canvasElementId);
   const caption = buildReceiptCaption({ customer, shop, lang });
 
   const img = new Image();
@@ -126,11 +127,10 @@ export const exportReceiptPdf = async ({ canvasElementId, filename = 'khata_rece
       directory: Directory.Cache
     });
 
-    await Share.share({
-      title: `${customer.name} - PDF रसीद`,
-      text: caption,
-      files: [writeResult.uri],
-      dialogTitle: 'PDF रसीद शेयर करें'
+    await DirectWhatsApp.shareImageToNumber({
+      phone: customer.phone,
+      filePath: writeResult.uri,
+      message: caption
     });
     return true;
   } else {
