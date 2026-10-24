@@ -7,51 +7,50 @@ export const SplashScreen = () => {
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
-      transition={{ duration: 0.5, ease: 'easeInOut' }}
-      className="fixed inset-0 z-[999999] flex flex-col items-center justify-between py-12 px-6 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 text-white select-none overflow-hidden"
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      className="fixed inset-0 z-[999999] flex flex-col items-center justify-between py-14 px-6 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 text-white select-none overflow-hidden"
     >
-      {/* Animated Glowing Ambient Blobs */}
+      {/* Floating Background Glow Orbs */}
       <motion.div
         animate={{
           scale: [1, 1.25, 1],
           x: [0, 20, 0],
-          y: [0, 30, 0]
+          y: [0, 25, 0]
         }}
-        transition={{ repeat: Infinity, duration: 8, ease: 'easeInOut' }}
+        transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
         className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-cyan-400/25 blur-3xl pointer-events-none"
       />
       <motion.div
         animate={{
-          scale: [1, 1.3, 1],
-          x: [0, -25, 0],
+          scale: [1, 1.25, 1],
+          x: [0, -20, 0],
           y: [0, -20, 0]
         }}
-        transition={{ repeat: Infinity, duration: 10, ease: 'easeInOut' }}
+        transition={{ repeat: Infinity, duration: 7, ease: 'easeInOut' }}
         className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-fuchsia-500/25 blur-3xl pointer-events-none"
       />
 
-      {/* Top Badge */}
+      {/* Top Status Pill */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15, duration: 0.5 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
         className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-xl border border-white/25 text-xs font-bold text-blue-100 tracking-wider shadow-lg"
       >
         <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin" style={{ animationDuration: '4s' }} />
         <span>डिजिटल किराना बहीखाता</span>
       </motion.div>
 
-      {/* Center Animated Logo & Branding */}
+      {/* Center Branding & Progress */}
       <div className="flex flex-col items-center text-center my-auto">
         <motion.div
-          initial={{ scale: 0.5, rotate: -15, opacity: 0 }}
+          initial={{ scale: 0.6, rotate: -10, opacity: 0 }}
           animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ type: 'spring', damping: 14, stiffness: 220, delay: 0.1 }}
-          className="relative mb-6"
+          transition={{ type: 'spring', damping: 16, stiffness: 240, delay: 0.1 }}
+          className="relative mb-5"
         >
-          {/* Multiple pulsing rings */}
           <motion.div
-            animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
+            animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0, 0.4] }}
             transition={{ repeat: Infinity, duration: 2, ease: 'easeOut' }}
             className="absolute -inset-3 rounded-[32px] bg-gradient-to-tr from-cyan-400 to-indigo-400 blur-md pointer-events-none"
           />
@@ -66,7 +65,7 @@ export const SplashScreen = () => {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.4 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
         >
           <h1 className="text-3xl font-black tracking-tight text-white flex items-center justify-center gap-1.5">
             ALTUM<span className="text-sky-300">KHATA</span>
@@ -79,20 +78,22 @@ export const SplashScreen = () => {
           </p>
         </motion.div>
 
-        {/* Animated Loading Bar */}
-        <motion.div
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 140, opacity: 1 }}
-          transition={{ delay: 0.3, duration: 1.2, ease: 'easeInOut' }}
-          className="h-1 bg-gradient-to-r from-sky-400 via-white to-indigo-300 rounded-full mt-6 shadow-sm"
-        />
+        {/* 1.8s Synchronized Progress Bar (Fills completely right before exit) */}
+        <div className="w-36 h-1 bg-white/20 rounded-full mt-6 overflow-hidden">
+          <motion.div
+            initial={{ width: '0%' }}
+            animate={{ width: '100%' }}
+            transition={{ delay: 0.25, duration: 1.8, ease: 'easeInOut' }}
+            className="h-full bg-gradient-to-r from-sky-300 via-white to-cyan-300 rounded-full"
+          />
+        </div>
       </div>
 
       {/* Bottom Creator Tribute */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.4 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
         className="flex flex-col items-center gap-2"
       >
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg">
@@ -101,7 +102,7 @@ export const SplashScreen = () => {
           </span>
           <motion.div
             animate={{ scale: [1, 1.35, 1] }}
-            transition={{ repeat: Infinity, duration: 1, ease: 'easeInOut' }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
           >
             <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
           </motion.div>

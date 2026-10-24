@@ -41,7 +41,7 @@ export function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 1900);
+    }, 2200);
     return () => clearTimeout(timer);
   }, []);
 
