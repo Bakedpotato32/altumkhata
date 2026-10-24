@@ -25,14 +25,17 @@ jobs:
           java-version: '17'
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install -D @capacitor/assets
 
       - name: Build Web Application
         run: npm run build
 
-      - name: Add and Sync Capacitor Android Platform
+      - name: Add Capacitor Android Platform & Generate Icons
         run: |
           npx cap add android || true
+          npx @capacitor/assets generate --android --iconBackgroundColor '#ffffff' || true
           npx cap sync android
 
       - name: Accept Android SDK Licenses
