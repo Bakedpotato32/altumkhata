@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Share2, FileText, Image as ImageIcon } from 'lucide-react';
+import { X, MessageCircle, FileText, Image as ImageIcon, Send } from 'lucide-react';
 import QRCode from 'qrcode';
-import { formatCurrency, getUpiUri } from '../utils/whatsapp';
+import { formatCurrency, getUpiUri, sendWhatsAppReminder } from '../utils/whatsapp';
 import { exportReceiptPdf, exportReceiptImage } from '../utils/receiptGenerator';
 import { GlassDialog } from './GlassDialog';
 import { triggerHaptic } from '../utils/haptics';
+import { useLanguage } from '../context/LanguageContext';
 
 export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) => {
+  const { lang } = useLanguage();
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -35,9 +37,21 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
     triggerHaptic('heavy');
     try {
       if (type === 'image') {
-        await exportReceiptImage('virtual-receipt-canvas', `${customer.name}_Khata_Slip.png`);
+        await exportReceiptImage({
+          canvasElementId: 'virtual-receipt-canvas',
+          filename: `${customer.name}_Khata_Slip.png`,
+          customer,
+          shop,
+          lang
+        });
       } else {
-        await exportReceiptPdf('virtual-receipt-canvas', `${customer.name}_Khata_Bill.pdf`);
+        await exportReceiptPdf({
+          canvasElementId: 'virtual-receipt-canvas',
+          filename: `${customer.name}_Khata_Bill.pdf`,
+          customer,
+          shop,
+          lang
+        });
       }
     } catch (err) {
       setErrorMessage('रसीद बनाने में समस्या: ' + (err.message || 'Error'));
@@ -60,7 +74,9 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
           <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50">
             <div>
               <h3 className="font-extrabold text-slate-800 text-lg">दुकान उधार पर्ची</h3>
-              <p className="text-xs text-slate-500">{customer.name} {customer.nickname ? `(${customer.nickname})` : ''}</p>
+              <p className="text-xs text-slate-500">
+                {customer.name} {customer.nickname ? `(${customer.nickname})` : ''} • {customer.phone || 'मोबाइल नहीं'}
+              </p>
             </div>
             <button
               onClick={() => {
@@ -73,7 +89,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
             </button>
           </div>
 
-          {/* Interactive Screen Preview */}
+          {/* Screen Preview */}
           <div className="p-4 overflow-y-auto space-y-4 no-scrollbar">
             <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50 flex items-center justify-between">
               <div>
@@ -107,29 +123,44 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
             </div>
           </div>
 
-          {/* Dual Action Buttons (Photo Slip & PDF) */}
-          <div className="p-3 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-2">
+          {/* Action Hub */}
+          <div className="p-3 bg-slate-50 border-t border-slate-100 space-y-2">
+            {/* Primary Action: Direct WhatsApp Chat */}
             <button
-              onClick={() => handleExport('image')}
-              disabled={isExporting}
-              className="py-3 px-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-xs shadow-md shadow-teal-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              onClick={() => {
+                triggerHaptic('medium');
+                sendWhatsAppReminder({ customer, shop, mode: 'polite', lang });
+              }}
+              className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow-md shadow-emerald-600/25 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              <ImageIcon className="w-4 h-4" />
-              <span>{isExporting ? 'बन रहा है...' : 'फोटो पर्ची (WhatsApp)'}</span>
+              <MessageCircle className="w-4 h-4" />
+              <span>सीधे व्हाट्सएप चैट में खोलें (Direct WhatsApp)</span>
             </button>
 
-            <button
-              onClick={() => handleExport('pdf')}
-              disabled={isExporting}
-              className="py-3 px-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xs shadow-md shadow-indigo-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-            >
-              <FileText className="w-4 h-4" />
-              <span>{isExporting ? 'बन रहा है...' : 'PDF रसीद'}</span>
-            </button>
+            {/* Secondary Row: Share Photo Slip (PNG) + PDF Slip */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleExport('image')}
+                disabled={isExporting}
+                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-extrabold text-xs shadow-md shadow-teal-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span>{isExporting ? 'बन रहा है...' : 'फोटो पर्ची भेजें'}</span>
+              </button>
+
+              <button
+                onClick={() => handleExport('pdf')}
+                disabled={isExporting}
+                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xs shadow-md shadow-indigo-500/25 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{isExporting ? 'बन रहा है...' : 'PDF रसीद'}</span>
+              </button>
+            </div>
           </div>
         </motion.div>
 
-        {/* UNCONSTRAINED 800PX VIRTUAL DESKTOP CANVAS (Safe in-tree rendering for Android WebViews) */}
+        {/* UNCONSTRAINED 800PX VIRTUAL DESKTOP CANVAS */}
         <div style={{ position: 'fixed', top: 0, left: 0, width: '800px', pointerEvents: 'none', zIndex: -100, opacity: 0.01 }}>
           <div
             id="virtual-receipt-canvas"
@@ -141,7 +172,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
               color: '#0f172a'
             }}
           >
-            {/* Header with Shop Logo */}
+            {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #2563eb', paddingBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 {shop.logo && (
@@ -170,7 +201,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
               </div>
             </div>
 
-            {/* Customer Box with Customer Photo */}
+            {/* Customer Box */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f8fafc', padding: '24px', borderRadius: '18px', margin: '30px 0', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 {customer.photo && (
@@ -245,7 +276,6 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
           </div>
         </div>
 
-        {/* Custom Glass Error Dialog */}
         <GlassDialog
           isOpen={Boolean(errorMessage)}
           onClose={() => setErrorMessage(null)}
