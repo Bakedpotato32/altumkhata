@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, MessageCircle, Heart } from 'lucide-react';
 import { useKhata } from './context/KhataContext';
 import { useLanguage } from './context/LanguageContext';
 import { SplashScreen } from './components/SplashScreen';
@@ -15,6 +15,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { GlassDock } from './components/GlassDock';
 import { GlassDialog } from './components/GlassDialog';
 import { triggerHaptic } from './utils/haptics';
+import { openKaranSupportChat } from './utils/whatsapp';
 
 export function App() {
   const {
@@ -35,12 +36,12 @@ export function App() {
 
   const { lang, toggleLanguage } = useLanguage();
 
-  // Splash Screen State (1.8s timer)
+  // Splash Screen State (1.9s)
   const [showSplash, setShowSplash] = useState(true);
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 1800);
+    }, 1900);
     return () => clearTimeout(timer);
   }, []);
 
@@ -86,7 +87,7 @@ export function App() {
         <div className="absolute bottom-20 left-10 w-80 h-80 rounded-full bg-rose-100/40 blur-3xl animate-blob-1" />
       </div>
 
-      {/* Header Bar */}
+      {/* Top Header Bar */}
       <div className="flex items-center justify-between py-2 mb-3">
         <div className="flex items-center gap-2.5">
           {shop.logo ? (
@@ -109,32 +110,47 @@ export function App() {
                 PRO
               </span>
             </div>
-            <p className="text-[11px] font-medium text-slate-500 truncate max-w-[170px]">
+            <p className="text-[11px] font-medium text-slate-500 truncate max-w-[150px]">
               {shop.shopName || 'किराना बहीखाता'}
             </p>
           </div>
         </div>
 
-        {/* Right Header Buttons */}
-        <div className="flex items-center gap-2">
+        {/* Right Header Buttons: '+ ग्राहक', 'Get Help WhatsApp (7054937918)', and 'Language' */}
+        <div className="flex items-center gap-1.5">
+          {/* 1-Tap Get Help Button */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => {
+              triggerHaptic('medium');
+              openKaranSupportChat();
+            }}
+            title="सहायता (Get Help) - WhatsApp Karan"
+            className="w-9 h-9 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 flex items-center justify-center shadow-sm active:scale-95 transition-all"
+          >
+            <MessageCircle className="w-4 h-4 fill-emerald-600" />
+          </motion.button>
+
+          {/* New Customer Button */}
           <motion.button
             whileTap={{ scale: 0.94 }}
             onClick={() => {
               triggerHaptic('medium');
               setIsAddCustomerOpen(true);
             }}
-            className="px-3.5 py-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-xs font-bold shadow-lg shadow-rose-500/25 flex items-center gap-1"
+            className="px-3 py-2 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-xs font-bold shadow-md shadow-rose-500/25 flex items-center gap-1"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>+ ग्राहक</span>
           </motion.button>
 
+          {/* Language Toggle */}
           <button
             onClick={() => {
               triggerHaptic('selection');
               toggleLanguage();
             }}
-            className="w-9 h-9 rounded-full glass-card flex items-center justify-center text-slate-700 active:scale-95 font-bold text-xs"
+            className="w-8 h-8 rounded-full glass-card flex items-center justify-center text-slate-700 active:scale-95 font-bold text-xs"
           >
             {lang === 'hi' ? 'EN' : 'हि'}
           </button>
@@ -165,7 +181,7 @@ export function App() {
         />
       )}
 
-      {/* Floating Glass Dock */}
+      {/* Bottom Floating Glass Dock */}
       <GlassDock
         currentTab={currentTab}
         setTab={(tab) => {

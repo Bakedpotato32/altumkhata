@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, AlertTriangle, Clock, TrendingUp, TrendingDown, Users, ChevronRight } from 'lucide-react';
+import { ArrowRight, AlertTriangle, Clock, TrendingUp, TrendingDown, Users, ChevronRight, Heart, MessageCircle } from 'lucide-react';
 import { HeroMetricCard } from './HeroMetricCard';
 import { ActionCards } from './ActionCards';
-import { formatCurrency, sendWhatsAppReminder } from '../utils/whatsapp';
+import { formatCurrency, sendWhatsAppReminder, openKaranSupportChat } from '../utils/whatsapp';
 import { triggerHaptic } from '../utils/haptics';
 
 export const HomeView = ({
@@ -117,6 +117,7 @@ export const HomeView = ({
         </div>
       )}
 
+      {/* Live Transaction Ledger Feed */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
@@ -173,6 +174,23 @@ export const HomeView = ({
             })}
           </div>
         )}
+      </div>
+
+      {/* Subtle Karan Watermark & Help Footer */}
+      <div className="pt-4 pb-2 flex flex-col items-center justify-center gap-1.5 opacity-80">
+        <button
+          onClick={() => {
+            triggerHaptic('light');
+            openKaranSupportChat();
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200 active:scale-95 transition-all"
+        >
+          <MessageCircle className="w-3 h-3 fill-emerald-600" />
+          <span>Get Help / सहायता: 7054937918</span>
+        </button>
+        <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1">
+          Made by Karan with love <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
+        </span>
       </div>
     </div>
   );

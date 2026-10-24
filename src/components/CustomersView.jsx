@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, UserPlus, Filter, ArrowUpDown, MapPin, Users } from 'lucide-react';
+import { Search, X, UserPlus, Filter, ArrowUpDown, MapPin, Users, Heart, MessageCircle } from 'lucide-react';
 import { CustomerCard } from './CustomerCard';
 import { useLanguage } from '../context/LanguageContext';
-import { formatCurrency } from '../utils/whatsapp';
+import { formatCurrency, openKaranSupportChat } from '../utils/whatsapp';
 import { triggerHaptic } from '../utils/haptics';
 
 export const CustomersView = ({
@@ -223,6 +223,13 @@ export const CustomersView = ({
             />
           ))
         )}
+      </div>
+
+      {/* Directory Footer Watermark */}
+      <div className="pt-4 pb-2 flex flex-col items-center justify-center gap-1 opacity-80">
+        <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1">
+          Made by Karan with love <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
+        </span>
       </div>
     </div>
   );

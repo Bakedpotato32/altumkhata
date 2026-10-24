@@ -14,7 +14,17 @@ export const getUpiUri = ({ upiId, shopName, amount }) => {
 };
 
 /**
- * Builds a formatted digital invoice for 1-tap direct chat delivery
+ * 1-Tap Get Help to Karan's Direct WhatsApp (7054937918)
+ */
+export const openKaranSupportChat = () => {
+  const message = encodeURIComponent(
+    "🙏 नमस्ते करण जी!\nमुझे AltumKhata ऐप के संबंध में सहायता / जानकारी चाहिए।"
+  );
+  window.open(`https://api.whatsapp.com/send?phone=917054937918&text=${message}`, '_blank');
+};
+
+/**
+ * Builds formatted digital invoice for 1-tap direct chat delivery
  */
 export const buildItemizedWhatsAppBill = ({ customer, shop, transactions = [], lang = 'hi' }) => {
   const balance = customer.balance;
@@ -22,7 +32,7 @@ export const buildItemizedWhatsAppBill = ({ customer, shop, transactions = [], l
   const custTxs = transactions
     .filter((t) => t.customerId === customer.id)
     .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5); // Latest 5 entries for a clean chat slip
+    .slice(0, 5);
 
   const upiLink = shop.upiId ? getUpiUri({
     upiId: shop.upiId,
@@ -65,11 +75,10 @@ export const buildItemizedWhatsAppBill = ({ customer, shop, transactions = [], l
       bill += `\n💳 *ऑनलाइन UPI से तुरंत भुगतान करें:*\n${upiLink}\n`;
     }
 
-    bill += `\n🙏 *कृपया समय पर भुगतान कर खाता व्यवस्थित रखें।*\n_दुकानदार: ${shop.ownerName || ''}_`;
+    bill += `\n🙏 *समय पर भुगतान कर खाता व्यवस्थित रखें।*\n_दुकानदार: ${shop.ownerName || ''}_\n\n_AltumKhata • Made by Karan with love 💕_`;
     return bill;
   }
 
-  // English Fallback
   let bill = `🧾 *${shop.shopName || 'Store Receipt'}*\n`;
   if (shop.address) bill += `📍 ${shop.address}\n`;
   bill += `📞 ${shop.phone || ''}\n`;
@@ -98,13 +107,10 @@ export const buildItemizedWhatsAppBill = ({ customer, shop, transactions = [], l
     bill += `\n💳 *Pay instantly via UPI:*\n${upiLink}\n`;
   }
 
-  bill += `\n🙏 *Kindly settle the dues at your earliest convenience.*\n_Owner: ${shop.ownerName || ''}_`;
+  bill += `\n🙏 *Kindly settle the dues at your earliest convenience.*\n_Owner: ${shop.ownerName || ''}_\n\n_AltumKhata • Made by Karan with love 💕_`;
   return bill;
 };
 
-/**
- * 1-Tap Direct WhatsApp Chat Launch
- */
 export const sendDirectWhatsAppInvoice = ({ customer, shop, transactions = [], lang = 'hi' }) => {
   const phone = (customer.phone || '').replace(/[^0-9]/g, '');
   const formattedPhone = phone.length === 10 ? `91${phone}` : phone;
@@ -118,9 +124,6 @@ export const sendDirectWhatsAppInvoice = ({ customer, shop, transactions = [], l
   window.open(waUrl, '_blank');
 };
 
-/**
- * Quick Single-Line Reminder Tagaada
- */
 export const sendWhatsAppReminder = ({ customer, shop, mode = 'polite', lang = 'hi' }) => {
   const balance = customer.balance;
   if (balance <= 0) return;
@@ -142,19 +145,19 @@ export const sendWhatsAppReminder = ({ customer, shop, mode = 'polite', lang = '
       `*${shop.shopName || 'किराना स्टोर'}* पर आपका कुल बाकी *${formatCurrency(balance)}* काफी समय से लंबित है।\n\n` +
       `कृपया आज ही भुगतान कर खाता व्यवस्थित करें ताकि भविष्य की उधारी सेवा बाधित न हो।\n` +
       (upiLink ? `\n💳 *UPI भुगतान लिंक:* \n${upiLink}\n` : '') +
-      `\nसंपर्क: ${shop.phone || ''}`;
+      `\nसंपर्क: ${shop.phone || ''}\n\n_AltumKhata • Made by Karan with love 💕_`;
   } else if (mode === 'festive') {
     message = `🌸 *नमस्ते ${greeting} जी!*\n\n` +
       `आशा है आप सकुशल हैं। *${shop.shopName || 'किराना स्टोर'}* पर आपका चालू बाकी *${formatCurrency(balance)}* है।\n\n` +
       `महीने का हिसाब चुकता करने हेतु समय निकालें।\n` +
       (upiLink ? `\n💳 *UPI भुगतान:* \n${upiLink}\n` : '') +
-      `\nधन्यवाद! 🙏\n_${shop.ownerName || ''}_`;
+      `\nधन्यवाद! 🙏\n_${shop.ownerName || ''}_\n\n_AltumKhata • Made by Karan with love 💕_`;
   } else {
     message = `🙏 *नमस्ते ${greeting} जी!*\n\n` +
       `🏪 *${shop.shopName || 'किराना स्टोर'}* पर आपका कुल बाकी हिसाब *${formatCurrency(balance)}* है।\n\n` +
       `📦 कृपया सुविधानुसार भुगतान करने की कृपा करें।\n` +
       (upiLink ? `\n💳 *ऑनलाइन UPI से तुरंत पे करें:* \n${upiLink}\n` : '') +
-      `\nधन्यवाद! 🙏\n_दुकानदार: ${shop.ownerName || ''} (${shop.phone || ''})_`;
+      `\nधन्यवाद! 🙏\n_दुकानदार: ${shop.ownerName || ''} (${shop.phone || ''})_\n\n_AltumKhata • Made by Karan with love 💕_`;
   }
 
   const encodedMsg = encodeURIComponent(message);

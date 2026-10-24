@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Store, Download, Check, Globe, Trash2 } from 'lucide-react';
+import { X, Store, Download, Check, Globe, Trash2, MessageCircle, Heart, Phone } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { GlassDialog } from './GlassDialog';
 import { triggerHaptic } from '../utils/haptics';
+import { openKaranSupportChat } from '../utils/whatsapp';
 
 export const SettingsModal = ({ isOpen, onClose, shop, onUpdateShop, onBackup, onPurgeData }) => {
   const { t, lang, toggleLanguage } = useLanguage();
@@ -13,7 +14,6 @@ export const SettingsModal = ({ isOpen, onClose, shop, onUpdateShop, onBackup, o
   const [phone, setPhone] = useState(shop.phone);
   const [upiId, setUpiId] = useState(shop.upiId);
 
-  // Custom Glass Dialog states
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
@@ -105,8 +105,27 @@ export const SettingsModal = ({ isOpen, onClose, shop, onUpdateShop, onBackup, o
             </button>
           </form>
 
-          {/* Tools & Reset Options */}
+          {/* Direct Karan WhatsApp Support Card */}
           <div className="pt-3 mt-3 border-t border-slate-100 space-y-2">
+            <button
+              onClick={() => {
+                triggerHaptic('success');
+                openKaranSupportChat();
+              }}
+              className="w-full py-3 px-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold text-xs shadow-md shadow-emerald-500/20 flex items-center justify-between active:scale-95 transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 fill-current" />
+                <div className="text-left">
+                  <div className="font-black">सहायता प्राप्त करें (Get Help)</div>
+                  <div className="text-[10px] text-emerald-100 font-medium">WhatsApp: 7054937918 (Karan)</div>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-xl bg-white/20 text-white text-[10px] font-bold">
+                चैट करें
+              </span>
+            </button>
+
             <button
               onClick={() => {
                 triggerHaptic('medium');
@@ -150,6 +169,13 @@ export const SettingsModal = ({ isOpen, onClose, shop, onUpdateShop, onBackup, o
               </span>
               <span className="text-[10px] text-rose-600">रीसेट</span>
             </button>
+          </div>
+
+          {/* Settings Watermark */}
+          <div className="pt-4 text-center">
+            <span className="text-[10px] font-bold text-slate-400 inline-flex items-center gap-1">
+              AltumKhata • Made by Karan with love <Heart className="w-3 h-3 text-rose-400 fill-rose-400" />
+            </span>
           </div>
         </motion.div>
 

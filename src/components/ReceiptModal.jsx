@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageCircle, FileText, Share2, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { X, MessageCircle, FileText, Share2, Sparkles, Image as ImageIcon, Heart } from 'lucide-react';
 import QRCode from 'qrcode';
 import { formatCurrency, getUpiUri, sendDirectWhatsAppInvoice } from '../utils/whatsapp';
 import { exportReceiptImageAttachment, exportReceiptPdf } from '../utils/receiptGenerator';
@@ -269,7 +269,7 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
               </tbody>
             </table>
 
-            {/* Footer with UPI QR */}
+            {/* Footer with UPI QR & Karan Watermark */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #cbd5e1', paddingTop: '20px' }}>
               <div style={{ maxWidth: '480px' }}>
                 <h4 style={{ margin: '0 0 6px', fontSize: '15px', fontWeight: '800', color: '#1e293b' }}>
@@ -280,6 +280,9 @@ export const ReceiptModal = ({ isOpen, onClose, customer, shop, transactions }) 
                 </p>
                 <p style={{ marginTop: '8px', fontSize: '13px', fontWeight: '700', color: '#2563eb' }}>
                   UPI ID: {shop.upiId}
+                </p>
+                <p style={{ marginTop: '10px', fontSize: '11px', fontWeight: '700', color: '#94a3b8' }}>
+                  AltumKhata Digital BahiKhata • Made by Karan with love 💕
                 </p>
               </div>
 
