@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { useKhata } from './context/KhataContext';
 import { useLanguage } from './context/LanguageContext';
+import { SplashScreen } from './components/SplashScreen';
 import { OnboardingModal } from './components/OnboardingModal';
 import { HomeView } from './components/HomeView';
 import { CustomersView } from './components/CustomersView';
@@ -34,7 +35,16 @@ export function App() {
 
   const { lang, toggleLanguage } = useLanguage();
 
-  const [currentTab, setTab] = useState('home'); // 'home' | 'customers'
+  // Splash Screen State (1.8s timer)
+  const [showSplash, setShowSplash] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const [currentTab, setTab] = useState('home');
 
   // Modals state
   const [txModal, setTxModal] = useState({ isOpen: false, type: 'diya', preSelectedCustomerId: null });
@@ -58,6 +68,11 @@ export function App() {
 
   return (
     <div className="min-h-screen relative pb-28 pt-3 px-4 max-w-md mx-auto">
+      {/* Animated Splash Screen */}
+      <AnimatePresence>
+        {showSplash && <SplashScreen />}
+      </AnimatePresence>
+
       {/* Onboarding Wizard */}
       <OnboardingModal
         isOpen={!shop.isConfigured}
@@ -71,7 +86,7 @@ export function App() {
         <div className="absolute bottom-20 left-10 w-80 h-80 rounded-full bg-rose-100/40 blur-3xl animate-blob-1" />
       </div>
 
-      {/* Header Bar matching AltumStamp Studio */}
+      {/* Header Bar */}
       <div className="flex items-center justify-between py-2 mb-3">
         <div className="flex items-center gap-2.5">
           {shop.logo ? (

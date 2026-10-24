@@ -2,58 +2,68 @@
 
 @layer utilities {
   .glass-card {
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.85);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+    transform: translateZ(0);
   }
   
   .glass-card-dark {
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateZ(0);
   }
 
   .glass-pill {
-    background: rgba(255, 255, 255, 0.65);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    transform: translateZ(0);
   }
 
   .glass-dock {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.95);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12), 0 0 1px 1px rgba(255, 255, 255, 0.8) inset;
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.12), 0 0 1px 1px rgba(255, 255, 255, 0.9) inset;
+    transform: translateZ(0);
+  }
+
+  /* Extreme Performance Boost for 100+ Customer Lists */
+  .list-item-contain {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 92px;
   }
 }
 
-/* GPU Accelerated Ambient Glow Blobs */
+/* Throttled Ambient Blobs to save budget GPU frame-times */
 @keyframes blob-float-1 {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(20px, 30px, 0) scale(1.08); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(15px, 20px, 0); }
 }
 
 @keyframes blob-float-2 {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(-25px, -20px, 0) scale(1.12); }
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-15px, -15px, 0); }
 }
 
 .animate-blob-1 {
-  animation: blob-float-1 12s ease-in-out infinite;
+  animation: blob-float-1 16s ease-in-out infinite;
   will-change: transform;
 }
 
 .animate-blob-2 {
-  animation: blob-float-2 15s ease-in-out infinite alternate;
+  animation: blob-float-2 20s ease-in-out infinite alternate;
   will-change: transform;
 }
 
-/* Hide scrollbars for slick app-like touch feeling */
+/* Slick native Android touch feeling without scrollbar lag */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
